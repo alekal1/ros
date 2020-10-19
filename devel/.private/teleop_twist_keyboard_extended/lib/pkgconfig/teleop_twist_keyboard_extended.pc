@@ -1,0 +1,8 @@
+prefix=/home/alekal/catkin_ws/devel/.private/teleop_twist_keyboard_extended
+
+Name: teleop_twist_keyboard_extended
+Description: Description of teleop_twist_keyboard_extended
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

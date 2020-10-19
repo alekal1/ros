@@ -1,0 +1,20 @@
+[35m[1mScanning dependencies of target move[0m
+[  0%] Built target geometry_msgs_generate_messages_py
+[  0%] Built target tf_generate_messages_eus
+[  0%] Built target geometry_msgs_generate_messages_eus
+[  0%] Built target tf_generate_messages_py
+[  0%] Built target geometry_msgs_generate_messages_cpp
+[ 33%] [32mBuilding CXX object CMakeFiles/move.dir/src/move.cpp.o[0m
+[ 33%] Built target tf_generate_messages_cpp
+[ 33%] Built target geometry_msgs_generate_messages_nodejs
+[ 33%] Built target tf_generate_messages_lisp
+[ 33%] Built target tf_generate_messages_nodejs
+[ 33%] Built target geometry_msgs_generate_messages_lisp
+[ 66%] Built target transform_frame_generate_messages_eus
+[ 66%] Built target transform_frame_generate_messages_py
+[ 66%] Built target transform_frame_generate_messages_lisp
+[ 66%] Built target transform_frame_generate_messages_cpp
+[ 66%] Built target transform_frame_generate_messages_nodejs
+[ 66%] Built target transform_frame_generate_messages
+[100%] [32m[1mLinking CXX executable /home/alekal/catkin_ws/devel/.private/transform_frame/lib/transform_frame/move[0m
+[100%] Built target move

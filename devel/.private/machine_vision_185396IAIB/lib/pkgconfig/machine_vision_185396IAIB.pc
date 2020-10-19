@@ -1,0 +1,8 @@
+prefix=/home/alekal/catkin_ws/devel/.private/machine_vision_185396IAIB
+
+Name: machine_vision_185396IAIB
+Description: Description of machine_vision_185396IAIB
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

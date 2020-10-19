@@ -1,0 +1,8 @@
+prefix=/home/alekal/catkin_ws/install
+
+Name: differential_robot_185396
+Description: Description of differential_robot_185396
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: 

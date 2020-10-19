@@ -1,0 +1,1 @@
+/home/alekal/catkin_ws/devel/.private/transform_frame/share/roseus/ros/transform_frame/manifest.l

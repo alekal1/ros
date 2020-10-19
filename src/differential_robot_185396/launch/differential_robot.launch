@@ -1,0 +1,11 @@
+<launch>
+  <param name="robot_description" command="$(find xacro)/xacro '--inorder' '$(find differential_robot_185396)/urdf/differential_robot.urdf'"/>
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"/>
+  <param name="use_gui" value="true"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find differential_robot_185396)/config/config.rviz" />
+  <node name="move" pkg="transform_frame" type="move"/>
+  <node name="teleop_twist_keyboard_extended" pkg="teleop_twist_keyboard_extended" type="teleop_twist_keyboard.py">
+    <remap from="keyboard_control/cmd_vel" to="move/cmd_vel"/>
+  </node>
+</launch>

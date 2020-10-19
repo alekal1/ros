@@ -1,0 +1,1 @@
+/home/alekal/catkin_ws/devel/.private/pub_and_sub_185396/lib/pkgconfig/pub_and_sub_185396.pc

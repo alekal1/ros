@@ -1,0 +1,8 @@
+prefix=/home/alekal/catkin_ws/devel/.private/transform_frame
+
+Name: transform_frame
+Description: Description of transform_frame
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

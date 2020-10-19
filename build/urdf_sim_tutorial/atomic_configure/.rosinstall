@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/alekal/catkin_ws/devel/.private/urdf_sim_tutorial/setup.sh

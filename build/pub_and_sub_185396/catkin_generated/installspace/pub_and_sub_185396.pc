@@ -1,0 +1,8 @@
+prefix=/home/alekal/catkin_ws/install
+
+Name: pub_and_sub_185396
+Description: Description of pub_and_sub_185396
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
