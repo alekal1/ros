@@ -16,17 +16,17 @@ class Publisher():
     def __init__(self, path):
         self.images = glob.glob(path+'/data/images/*.png') # Loads the images
         self.publisher = rospy.Publisher('/image_raw', Image, queue_size=1000) # Init publisher
-        self.rate = rospy.Rate(2)
+        self.rate = rospy.Rate(2) # Delay 2 seconds
 
-        self.len_images = len(self.images)
-        self.bridge = CvBridge()
-        self.current_index = 0
-        self.msg = Image()
+        self.len_images = len(self.images) # How many images do we have
+        self.bridge = CvBridge() 
+        self.current_index = 0 # Current image index
+        self.msg = Image() # Init empty Image message
 
-    def create_image_message(self, data):
+    def create_image_message(self, data): # Create image message
         img = cv2.imread(data)
         self.msg = self.bridge.cv2_to_imgmsg(img, encoding="rgb8")
-        self.msg.header.frame_id = "camera"
+        self.msg.header.frame_id = "camera" # Add header frame id
 
     def publish(self):
         if self.current_index % self.len_images == 0:

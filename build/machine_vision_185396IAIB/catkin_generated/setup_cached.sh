@@ -8,6 +8,8 @@
 
 # modified environment variables
 export CMAKE_PREFIX_PATH="/home/alekal/catkin_ws/devel/.private/machine_vision_185396IAIB:$CMAKE_PREFIX_PATH"
+export LD_LIBRARY_PATH="/home/alekal/catkin_ws/devel/.private/machine_vision_185396IAIB/lib:$LD_LIBRARY_PATH"
+export PKG_CONFIG_PATH="/home/alekal/catkin_ws/devel/.private/machine_vision_185396IAIB/lib/pkgconfig:$PKG_CONFIG_PATH"
 export PWD="/home/alekal/catkin_ws/build/machine_vision_185396IAIB"
 export ROSLISP_PACKAGE_DIRECTORIES="/home/alekal/catkin_ws/devel/.private/machine_vision_185396IAIB/share/common-lisp:$ROSLISP_PACKAGE_DIRECTORIES"
 export ROS_PACKAGE_PATH="/home/alekal/catkin_ws/src/machine_vision_185396IAIB:$ROS_PACKAGE_PATH"
