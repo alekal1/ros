@@ -29,6 +29,7 @@ class VideoPublisher:
         while (self.cap.isOpened()):
             ret, frame = self.cap.read()
             self.frame_counter += 1
+            # rospy.loginfo('Frame counter: %s Video Frames: %s', self.frame_counter, self.video_frames)
             if self.frame_counter == self.video_frames:
                 self.frame_counter = 0
                 self.cap = cv2.VideoCapture(self.video[0]) # Recaptures video when it's finished
@@ -37,7 +38,6 @@ class VideoPublisher:
                 self.publisher.publish(self.frame_img)
                 if cv2.waitKey(25) & 0xFF == ord('q'):
                     break
-        self.cap.release()
 
 
     def run(self):
