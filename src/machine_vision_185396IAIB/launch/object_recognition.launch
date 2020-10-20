@@ -1,0 +1,8 @@
+<launch>
+
+    <arg name="rvizconfig" default="$(find machine_vision_185396IAIB)/config/object.rviz"/>
+
+    <node name="video_publisher" pkg="machine_vision_185396IAIB" type="video_publisher.py"/>
+    <node name="object_recognition" pkg="machine_vision_185396IAIB" type="video_subscriber.py" output='screen'/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)"/>
+</launch>
