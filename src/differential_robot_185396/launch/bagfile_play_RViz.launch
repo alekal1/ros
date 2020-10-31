@@ -1,0 +1,8 @@
+<launch>
+    <arg name="bagfile" default="$(find differential_robot_185396)/bags/nicebag.bag"/>
+    <arg name="rvizconfig" default="$(find differential_robot_185396)/config/imu.rviz"/>
+
+
+    <node pkg="rosbag" type="play" name="player" args="-l $(arg bagfile)" />
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)"/>
+</launch>

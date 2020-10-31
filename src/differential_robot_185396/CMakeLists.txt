@@ -160,8 +160,8 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 # catkin_install_python(PROGRAMS
-#   scripts/encoders_node.py scripts/odometry_node.py
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#   scripts/encoders_node.py scripts/odometry_node.py scripts/serial_interface.py scripts/simple_control_template.py
+#   DESTINATION ${CATKIN_PACKAGE_BIN_ESTINATION}
 # )
 
 ## Mark executables for installation

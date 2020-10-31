@@ -1,0 +1,6 @@
+<launch>
+
+    <node name="serial_interface_node" pkg="differential_robot_185396" type="serial_interface.py" output="screen" args="/dev/ttyUSB*"/>
+    <node pkg="differential_robot_185396" type="record" name="rosbag_record"
+    <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args='1 0 0 0 0 0 1 map imu_link 100'/>
+</launch>
