@@ -39,6 +39,12 @@ class PDController:
         self.distance_margin = rospy.get_param("/mission/distance_margin")
         self.waypoints = rospy.get_param("/mission/waypoints")
 
+        self.linear_errors = []
+        self.angular_errors = []
+
+        self.linear_command = 0
+        self.angular_command = 0
+
         # Print the parameters
         rospy.loginfo("Got static data from parameter server:")
         rospy.loginfo(" Mission parameters:")
@@ -144,11 +150,34 @@ class PDController:
         @param: self
         @result: sets the values in self.vel_cmd
         """
+
         # Output 0 (skip all calculations) if the last waypoint was reached
         if self.done:
             self.vel_cmd = [0.0,0.0]
-            return        
+            return
         # TODO: Your code here
+        x_diff = self.position.x - self.waypoints[self.waypoints][0]
+        y_diff = self.position.y - self.waypoints[self.waypoints][1]
+
+        linear_error = x_diff + y_diff
+        angular_error = math.atan2(y_diff, x_diff) - Odometry.pose.orientation.quaternion.w
+
+
+        if len(self.linear_errors) == 0:
+            e_linear_dot = linear_error - 0
+        else:
+            e_linear_dot = (self.linear_errors[-1][0] - self.linear_error[-1][1])
+        self.linear_errors.append([linear_error, rospy.Time.now().to_sec()])
+
+        if len(self.angular_errors) == 0:
+            e_angular_dot = angular_error - 0
+        else:
+            e_angular_dot = (self.angular_errors[-1][0] - self.angular_error[-1][1])
+        self.angular_errors.append([angular_error, rospy.Time.now().to_sec()])
+
+        self.linear_command = (self.Kp * linear_error) + (self.Kd * e_linear_dot)
+        self.angular_command = (self.Kp * angular_error) + (self.Kd * e_angular_dot)
+            
 
     def publish_vel_cmd(self):
         """
@@ -157,7 +186,10 @@ class PDController:
         @result: publish message
         """     
         self.twist = Twist()
-        # TODO: Your code here        
+        # TODO: Your code here 
+        self.twist.linear = self.linear_command
+        self.twist.angular = self.angular_command
+        self.publisher_cmd_vel.publish(self.twist)  
 
     def publish_waypoints(self):
         """

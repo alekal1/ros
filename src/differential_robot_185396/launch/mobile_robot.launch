@@ -1,3 +1,6 @@
 <launch>
     <rosparam command="load" file='$(find differential_robot_185396)/config/waypoints.yaml'/>
+
+    <node name="waypoint_node" pkg="differential_robot_185396" type="simple_control_template.py"/>
+    <node name="rviz" pkg="rviz" type="rviz"/>
 </launch>
