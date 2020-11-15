@@ -1,0 +1,8 @@
+prefix=/home/alekal/catkin_ws/devel/.private/differential_robot_lab7
+
+Name: differential_robot_lab7
+Description: Description of differential_robot_lab7
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

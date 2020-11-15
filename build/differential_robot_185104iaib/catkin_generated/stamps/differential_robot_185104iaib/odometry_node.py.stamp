@@ -1,0 +1,161 @@
+#!/usr/bin/env python
+"""
+publishes encoder output data based on a fake absolute encoder for the two wheels of a differentially steered robot
+
+@author: Simon Pierre Godon
+@contact: simon.godon@ttu.ee
+@creation_date: 25-08-2020
+"""
+import rospy
+import math
+import tf
+from math import sin, cos, pi
+from std_msgs.msg import String
+from differential_robot_185104iaib.msg import counter_message
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
+
+message = Odometry()
+message.child_frame_id = 'base_link'
+message.header.frame_id = 'odom'
+
+odom_pub = rospy.Publisher("odom", Odometry, queue_size=50)
+odom_broadcaster = tf.TransformBroadcaster()
+
+x = 0.0
+y = 0.0
+th = 0.0
+
+vx = 0.0
+vy = 0.0
+vth = 0.0
+
+xList = []
+dif = 0
+
+right = []
+left = []
+
+rightTik = 0
+leftTik = 0
+
+radRight = 0
+radLeft = 0
+
+angLeftSpeed = 0
+angRightSpeed = 0
+
+linearSpeedRight = 0
+linearSpeedLeft = 0
+
+linearRobot = 0
+angularRobot = 0
+
+def callback(data):
+    global xList, dif, left, right, leftTik, rightTik, radLeft, radRight, angLeftSpeed, angRightSpeed, linearSpeedLeft, linearSpeedRight, linearRobot, angularRobot, x, y, th, vx, vy, vth, odom_pub, odom_broadcaster, message
+    xList.append(rospy.get_time())
+    current_time = rospy.Time.now()
+    message.header.stamp = current_time
+    left.append(data.count_left)
+    right.append(data.count_right)
+    
+    if len(xList) > 1:
+        dif = calculate(xList)
+    if len(right) > 1:
+        rightTik = calculate(right)
+        leftTik = calculate(left)
+
+        if rightTik < -900:
+            rightTik = rightTik + 1440
+        if rightTik > 1000:
+            rightTik = rightTik - 1440
+
+        if leftTik < -900:
+            leftTik = leftTik + 1440
+        if leftTik > 1000:
+            leftTik = leftTik - 1440 
+
+        radLeft = radians(leftTik)
+        radRight = radians(rightTik)
+
+        
+
+        angLeftSpeed = radLeft / dif
+        angRightSpeed = radRight / dif
+
+        linearSpeedLeft = linearSpeed(angLeftSpeed)
+        linearSpeedRight = linearSpeed(angRightSpeed)
+
+        linearRobot = (linearSpeedLeft + linearSpeedRight) / 2.0
+        angularRobot = (linearSpeedRight - linearSpeedLeft) / 0.165
+
+        message.twist.twist = Twist(Vector3(linearRobot, 0, 0), Vector3(0, 0, angularRobot))
+
+        vx = linearRobot
+        vth = angularRobot
+
+        dt = (xList[-1] - xList[-2])
+        delta_x = (vx * cos(th) - vy * sin(th)) * dt
+        delta_y = (vx * sin(th) + vy * cos(th)) * dt
+        delta_th = vth * dt
+
+        x += delta_x
+        y += delta_y
+        th += delta_th
+
+        odom_quat = tf.transformations.quaternion_from_euler(0, 0, th)
+
+        odom_broadcaster.sendTransform(
+            (x, y, 0.),
+            odom_quat,
+            current_time,
+            "base_link",
+            "odom"
+        )
+
+        # set the position
+        message.pose.pose = Pose(Point(x, y, 0.), Quaternion(*odom_quat))
+        
+        # publish the message
+        odom_pub.publish(message)
+        print(message.pose.pose.position)
+
+    if len(xList) > 1:
+        xList = clearList(xList)
+    if len(right) > 1:
+        right = clearList(right)
+        left = clearList(left)
+
+
+def calculate(purpose):
+    return purpose[-1] - purpose[-2] 
+
+def clearList(purpose):
+    return purpose[-1:]
+
+def radians(tiks):
+    return ((tiks/4.0) * math.pi) / 180.0
+
+def linearSpeed(speed):
+        return speed * 0.035
+
+    
+
+def subscriber():
+
+    # In ROS, nodes are uniquely named. If two nodes with the same
+    # name are launched, the previous one is kicked off. The
+    # anonymous=True flag means that rospy will choose a unique
+    # name for our 'listener' node so that multiple listeners can
+    # run simultaneously.
+
+    rospy.init_node('odometry_node', anonymous=True)
+
+    rospy.Subscriber("/encoders_output", counter_message, callback)
+
+    # spin() simply keeps python from exiting until this node is stopped
+    rospy.spin()
+
+if __name__ == '__main__':
+    subscriber()
+

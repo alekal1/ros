@@ -1,24 +1,20 @@
 #!/usr/bin/env python
 
 """
-Templete for home assignment 7 (Robot Control).
-Node to take a set of waypoints and to drive a differential
-drive robot through those waypoints using a simple PD controller
-and provided odometry data.
-
-Students should complete the code. Note the places marked with "# TODO".
+Solution to home assignment 7 (Robot Control). Node to take a set of
+waypoints and to drive a differential drive robot through those waypoints
+using a simple PD controller and provided odometry data.
 
 @author: 
 @date: 
 @input: Odometry as nav_msgs Odometry message
-@output: body velocity commands as geometry_msgs Twist message;
-         list of waypoints as MarkerArray message
+@output: body velocity commands as geometry_msgs Twist message.
 """
-
+import tf
 import math
 import rospy
 import numpy as np
-from geometry_msgs.msg import Twist, Point
+from geometry_msgs.msg import Twist, Point, PoseStamped
 from visualization_msgs.msg import MarkerArray, Marker
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
@@ -28,22 +24,13 @@ angle_threshold = 0.01 #  [rad] if error in heading is greater than this value, 
 
 class PDController:
     def __init__(self):
-        # Registering start time of this node
-        self.startTime = rospy.Time.now().to_sec()
-
         # Get the static parameters from the parameter server
         # (which have been loaded onto the server from the yaml file using the launch file).
         # The namespace defined in the launch file must match the namespace used here (i.e., "controller_waypoints")
-        self.Kd = rospy.get_param("/controller/Kd")
-        self.Kp = rospy.get_param("/controller/Kp")
-        self.distance_margin = rospy.get_param("/mission/distance_margin")
-        self.waypoints = rospy.get_param("/mission/waypoints")
-
-        self.linear_errors = []
-        self.angular_errors = []
-
-        self.linear_command = 0
-        self.angular_command = 0
+        self.Kd = rospy.get_param("/controller_waypoints/controller/Kd")
+        self.Kp = rospy.get_param("/controller_waypoints/controller/Kp")
+        self.distance_margin = rospy.get_param("/controller_waypoints/mission/distance_margin")
+        self.waypoints = rospy.get_param("/controller_waypoints/mission/waypoints")
 
         # Print the parameters
         rospy.loginfo("Got static data from parameter server:")
@@ -59,20 +46,25 @@ class PDController:
         rospy.loginfo("  Derivative gains  : %.2f, %.2f",self.Kd[0],self.Kd[1])
         rospy.loginfo("----------------------------------------------------------")
         
-        # Initialization of class variables
-        self.wpIndex = 0          # counts the visited waypoints
+        self.wpIndex = 0
         self.position = Point()   # current position of robot;         Point (3D vector: .x, .y, .z)
         self.heading = 0.0        # current orientation of robot (rad yaw)
+        self.errors = [0.0,0.0]   # 2D vector: current errors in distance and heading
+        self.de = [0.0,0.0]       # 2D vector: change of errors in distance and heading
+        self.dt = 0               # time difference between current and last error
+        self.rxTime = 0.0         # time of reception of last odom message (float seconds)
         self.done = False
         self.init = True
         self.vel_cmd = [0.0,0.0]  # calculated velocities (linear, angular)
-        # Publishers and subscribers
-        self.publisher_cmd_vel = rospy.Publisher("/controller_diffdrive/cmd_vel",Twist,queue_size=10)
+        self.publisher_cmd_vel = rospy.Publisher("/diff_drive_controller/cmd_vel",Twist,queue_size=10)
         self.publisher_waypoints = rospy.Publisher("/mission_control/waypoints",MarkerArray,queue_size=10)
         rospy.Subscriber('odom', Odometry, self.onOdom)
-        # Messages
         self.marker_array = None
-        self.twist = None        
+        self.twist = None
+        self.startTime = rospy.Time.now().to_sec()
+        rospy.loginfo("Started node at %.2f",self.startTime)
+        self.listener = tf.TransformListener()
+        self.pose = PoseStamped()
 
 
     def wrapAngle(self, angle):
@@ -85,8 +77,12 @@ class PDController:
         @param: angle - angle to be wrapped in [rad]
         @result: returns wrapped angle -Pi <= angle <= Pi
         """        
-        if angle > math.pi or angle < -1*math.pi:
-            return -(2*math.pi - angle)
+        if angle > math.pi:
+            return  self.wrapAngle(angle - 2*math.pi)
+        elif angle < -math.pi:
+            return  self.wrapAngle(angle + 2*math.pi)
+        else:
+            return angle
 
     def rad2deg(self, angle):
         """
@@ -130,17 +126,13 @@ class PDController:
 
     def isWaypointReached(self):
         """
-        Checks if waypoint is reached based on pre-defined threshold.
+        Checks if waypoint is reached based on user-defined threshold.
         @param: self
         @result: returns True if waypoint is reached, otherwise False
         """
         if not self.waypoints:
             return False
-        # Calculates "distance"
-        x_diff = (self.waypoints[self.wpIndex][0] - self.position.x) ** 2
-        y_diff = (self.waypoints[self.wpIndex][1] - self.position.y) ** 2
-        distance = math.sqrt(x_diff + y_diff)
-        if distance < self.distance_margin:
+        if math.sqrt((self.position.x - self.waypoints[0][0]) ** 2 + (self.position.y - self.waypoints[0][1]) ** 2) < self.distance_margin:
             return True        
         return False
 
@@ -150,34 +142,73 @@ class PDController:
         @param: self
         @result: sets the values in self.vel_cmd
         """
-
         # Output 0 (skip all calculations) if the last waypoint was reached
         if self.done:
             self.vel_cmd = [0.0,0.0]
             return
-        # TODO: Your code here
-        x_diff = self.position.x - self.waypoints[self.waypoints][0]
-        y_diff = self.position.y - self.waypoints[self.waypoints][1]
 
-        linear_error = x_diff + y_diff
-        angular_error = math.atan2(y_diff, x_diff) - Odometry.pose.orientation.quaternion.w
+        # Determine dt
+        now = rospy.Time.now().to_sec()
+        self.dt = now - self.rxTime
+        self.rxTime = now
+        if self.init:
+            self.init = False
+            return
+        if self.dt == 0:
+            return
 
+        # Print some info
+        rospy.loginfo("Current position:")
+        rospy.loginfo(" x: %.1f",self.position.x)
+        rospy.loginfo(" y: %.1f",self.position.y)
+        rospy.loginfo("Current waypoint: %d",self.wpIndex)
+        rospy.loginfo(" Waypoint x: %.1f",self.waypoints[0][0])
+        rospy.loginfo(" Waypoint y: %.1f",self.waypoints[0][1])
 
-        if len(self.linear_errors) == 0:
-            e_linear_dot = linear_error - 0
+        # Determine current errors and their differentials        
+        lastErrors = [self.errors[0],self.errors[1]]
+        diff_y = self.waypoints[0][1]-self.position.y
+        diff_x = self.waypoints[0][0]-self.position.x
+        wp_heading = math.atan2( diff_y , diff_x )
+        self.errors[1] = wp_heading - self.heading
+        self.errors[1] = self.wrapAngle(self.errors[1])   
+        self.de[1] = self.errors[1] - lastErrors[1]
+        if abs(self.errors[1]) < angle_threshold:
+            self.errors[0] = np.sqrt( diff_x**2 + diff_y**2 )
+            self.de[0] = self.errors[0] - lastErrors[0]
         else:
-            e_linear_dot = (self.linear_errors[-1][0] - self.linear_error[-1][1])
-        self.linear_errors.append([linear_error, rospy.Time.now().to_sec()])
+            # Turning on the spot
+            self.errors[0] = 0.0       
+            self.de[0] = 0.0 
+        
+        # Print the errors
+        rospy.loginfo("Current errors:")
+        rospy.loginfo(" DeltaX [m]   : %.2f",diff_x)
+        rospy.loginfo(" DeltaY [m]   : %.2f",diff_y)
+        rospy.loginfo(" Distance [m] : %.2f",self.errors[0])
+        rospy.loginfo(" Heading [rad]: %.2f",self.errors[1])
+        rospy.loginfo(" Heading [deg]: %.2f",self.rad2deg(self.errors[1]))
+        # rospy.loginfo("Differential of errors:")
+        # rospy.loginfo(" Distance [m] : %.4f",self.de[0])
+        # rospy.loginfo(" Heading [rad]: %.4f",self.de[1])
+        # rospy.loginfo(" Heading [deg]: %.4f",self.rad2deg(self.de[1]))
+        # rospy.loginfo("Time difference [s]: %.4f",self.dt)
+        # rospy.loginfo("")
 
-        if len(self.angular_errors) == 0:
-            e_angular_dot = angular_error - 0
-        else:
-            e_angular_dot = (self.angular_errors[-1][0] - self.angular_error[-1][1])
-        self.angular_errors.append([angular_error, rospy.Time.now().to_sec()])
+        # Calculate command velocities
+        lin_p = self.Kp[0] * self.errors[0]
+        lin_d = self.Kd[0] * (self.de[0]/self.dt)
+        ang_p = self.Kp[1] * self.errors[1]
+        ang_d = self.Kd[1] * (self.de[1]/self.dt)
+        linear = lin_p + lin_d
+        angular = ang_p + ang_d
+        self.vel_cmd = [linear , angular]
 
-        self.linear_command = (self.Kp * linear_error) + (self.Kd * e_linear_dot)
-        self.angular_command = (self.Kp * angular_error) + (self.Kd * e_angular_dot)
-            
+        # Print results
+        rospy.loginfo("PD outputs:")
+        rospy.loginfo(" Linear  [P | D]: %.2f | %.2f",lin_p,lin_d)
+        rospy.loginfo(" Angular [P | D]: %.2f | %.2f",ang_p,ang_d)
+        rospy.loginfo("")
 
     def publish_vel_cmd(self):
         """
@@ -186,10 +217,9 @@ class PDController:
         @result: publish message
         """     
         self.twist = Twist()
-        # TODO: Your code here 
-        self.twist.linear = self.linear_command
-        self.twist.angular = self.angular_command
-        self.publisher_cmd_vel.publish(self.twist)  
+        self.twist.linear.x = self.vel_cmd[0]
+        self.twist.angular.z = self.vel_cmd[1]
+        self.publisher_cmd_vel.publish(self.twist)
 
     def publish_waypoints(self):
         """
@@ -220,6 +250,7 @@ class PDController:
             self.marker_array.markers.append(marker)
         self.publisher_waypoints.publish(self.marker_array)
 
+
     def onOdom(self, odom_msg):
         """
         Callback function, handling incoming odometry messages.
@@ -227,12 +258,24 @@ class PDController:
         @param odom_msg - odometry geometry message
         @result: update of relevant vehicle state variables
         """
+
+        
+        self.pose.header.stamp = rospy.Time()
+        self.pose.header.frame_id = odom_msg.header.frame_id
+        self.pose.pose = odom_msg.pose.pose
+
+        try:
+            new_pose = self.listener.transformPose('map', self.pose)
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+            new_pose = self.pose
+
+    
         # Store odometry data    
-        # Store position from odom message in "self.position"   
-        self.position = (odom_msg.pose.pose.x, odom_msg.pose.pose.y, odom_msg.pose.pose.z)
+        self.position = new_pose.pose.position
+        # self.position.x = odom_msg.pose.pose.position.x
+        # self.position.y = odom_msg.pose.pose.position.y
         explicit_quat = [odom_msg.pose.pose.orientation.x, odom_msg.pose.pose.orientation.y, odom_msg.pose.pose.orientation.z, odom_msg.pose.pose.orientation.w]
         euler = euler_from_quaternion(explicit_quat)
-        # Store yaw (heading) from "euler" in "self.heading"
         self.heading = euler[2]
 
         # Check if current target has been reached; set next one if necessary and possible        

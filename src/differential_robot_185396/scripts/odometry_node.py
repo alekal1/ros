@@ -1,216 +1,146 @@
 #!/usr/bin/env python
+
 import rospy
 import math
-from nav_msgs.msg import Odometry
-from std_msgs.msg import Header
-from gazebo_msgs.srv import GetModelState, GetModelStateRequest
+import tf
 from differential_robot_185396.msg import counter_message
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 
-list_of_times = []
-dict_of_encoders = {}
-right_encoders_values = []
-left_encoders_values = []
-diff_betweeen_messages = 0
+class OdometryNode():
 
-cpr = 1440 # counts per second
-radians_left = 0
-radians_right = 0
+    def __init__(self):
+        rospy.loginfo('Initializing odometry node')
 
-left_wheel_speed = 0
-right_wheel_speed = 0
+        ## Class constants:
+        self.wheel_diam = 70.0/1000.0   # Wheels diameter [m]
+        self.wheel_dist = 0.165         # Wheels distance [m]
+        self.cpr = 1440.0               # Encoders clicks per revolution
+        self.assume_folding = 500.0     # If absolute difference between last and current encoder pos is greater than this,
+                                        # we assume that the encoder has passed 0-point
 
-odom = Odometry()
-header = Header()
-header.frame_id = '/odom'
-header.child_frame = 'base_link'
+        ## Class variables:
+        self.init = True         # First message not received yet
+        self.currentTime = None
+        self.lastReceive = 0.0   # Time of previous message
+        self.currReceive = 0.0   # Time of current message
+        self.diffTime = 0.0      # Time difference between current and last receive
+        self.lastPosL = 0        # Left wheel last position
+        self.lastPosR = 0        # Right wheel last position
+        self.currPosL = 0        # Left wheel current position
+        self.currPosR = 0        # Right wheel current position
+        self.rotSpeedL = 0.0     # Left wheel speed [rad/s]
+        self.rotSpeedR = 0.0     # Right wheel speed [rad/s]
+        self.linSpeedL = 0.0     # Left wheel speed [m/s]
+        self.linSpeedR = 0.0     # Right wheel speed [m/s]
+        self.fwdSpeedC = 0.0     # Center forward speed [m/s]
+        self.rotSpeed = 0.0      # Rate of rotation of the robot [rad/s]
+        self.rotAngle = 0.0      # Angle of rotation of robot [rad]
+        self.posX = 0.0
+        self.posY = 0.0
 
-def callback(msgs):
-    """
-    Callback method.
-    """
+        self.odom = Odometry()
+        self.odom.header.frame_id = "odom"
+        self.odom.child_frame_id = "base_link"
 
-    # Initialize global variables
-    global dict_of_encoders
-    global right_encoders_values
-    global left_encoders_values
-    global diff_betweeen_messages
-
-    calculate_time_between_messages() # Calculate time between messages
-    calculate_wheels_rotation_velocities(msgs.count_left, msgs.count_right)
-    calculate_wheels_linear_velocities()
-    calculate_robot_linear_velocity()
-    calculate_robot_angular_velocity()
-
-
-def calculate_time_between_messages():
-    """
-    Calculates time between messages.
-
-    """
-
-     # Make global variables
-    global list_of_times
-    global diff_betweeen_messages
-
-    now = rospy.get_time() # Get time
-    list_of_times.append(now) # Store the time in list
-
-    diff_betweeen_messages = tick_calculation(list_of_times)
-    # rospy.loginfo(rospy.get_caller_id() + " Difference between messages: %s", diff)
-    if len(list_of_times) > 2:
-        list_of_times = list_of_times[-1:] # Clears list
-
-
-def calculate_wheels_rotation_velocities(left_encoder, right_encoder):
-    global cpr
-    global radians_left
-    global radians_right
-    global left_wheel_speed
-    global right_wheel_speed
-
-    """
-    Method for rotation velocities calculation.
-    """
-    right_encoders_values.append(right_encoder) # Store right encoders values in list
-    left_encoders_values.append(left_encoder) # Store left encoders values in list
-    
-    # Store all encoders in dict
-    dict_of_encoders['left'] = left_encoders_values
-    dict_of_encoders['right'] = right_encoders_values
-
-    # Get right values
-    right_values = dict_of_encoders['right']
-
-    # Get left values
-    left_values = dict_of_encoders['left']
-
-    # Calculate right ticks
-    r_tick = tick_calculation(right_values)
-    if r_tick > 1000:
-        r_tick = cpr - r_tick
-
-    # Calculate left ticks
-    l_tick = tick_calculation(left_values)
-    if l_tick > 1000:
-        l_tick = cpr - l_tick
-
-    # Because time betwen messages are small, we need to handle when it's value is 0
-    try:
-        radians_left = calculate_radians(l_tick)
-        radians_right = calculate_radians(r_tick)
-        left_wheel_speed = radians_left / diff_betweeen_messages
-        right_wheel_speed  = radians_right / diff_betweeen_messages
-
-        dict_of_encoders['right'] = right_values[-1:]
-        dict_of_encoders['left'] = left_values[-1:]
-    except ZeroDivisionError:
-        pass
-
-    # rospy.loginfo("Left speed %s", left_wheel_speed)
-    # rospy.loginfo("Right speed %s", right_wheel_speed)
-
-def calculate_wheels_linear_velocities():
-    """
-    Method to calculate linear velocities of both wheels
-    """
-    global cpr
-    global radians_left
-    global radians_right
-
-    wheel_radius = 0.075
-
-    linear_velocity_left = radians_left * wheel_radius
-    linear_velocity_right = radians_right * wheel_radius
-
-    # rospy.loginfo("Linear velocity left %s m/s", linear_velocity_left)
-    # rospy.loginfo("Linear velocity right %s m/s", linear_velocity_right)
-    return linear_velocity_left, linear_velocity_right
-
-def calculate_robot_linear_velocity():
-    """
-    Method to calculate robot linear velocity.
-    """
-
-    global left_wheel_speed
-    global right_wheel_speed
-
-    # rospy.loginfo("Robot linear velocity %s", (right_wheel_speed - left_wheel_speed) / 2)
-    return (right_wheel_speed - left_wheel_speed) / 2
-
-def calculate_robot_angular_velocity():
-    """
-    Method to calculate robot angular velocity.
-    """
-
-    distance_between_wheels = 0.165 # Distance between wheels in m
-    # rospy.loginfo("Robot angular velocity %s", (right_wheel_speed - left_wheel_speed) / distance_between_wheels)
-    return (right_wheel_speed - left_wheel_speed) / distance_between_wheels
-
-
-def calculate_radians(val):
-    """
-    Method for radian calculation.
-    """
-
-    return ((val/4) * math.pi) / 100
-
-
-def tick_calculation(values):
-    """
-    Method for calculation.
-    """
-
-    try:
-        return abs(values[-1] - values[-2])
-    except IndexError:
-        return 0
-
-
-def run():
-    global odom
-    global header
-    """
-    Main method.
-    """
-
-    rospy.Subscriber('/encoders_output', counter_message, callback)
-
-    rospy.init_node('odometry_node', anonymous=True)
-    odom_pub = rospy.Publisher('/odom', Odometry)
-    r = rospy.Rate(2)
-    while not rospy.is_shutdown():
+    def callback(self,data):
+        if data.count_left >= self.cpr or data.count_right >= self.cpr:
+            return               # Sanity check: We sometimes receive illegal encoder values
+        self.lastReceive = self.currReceive
+        self.currentTime = rospy.Time.now()
+        self.currReceive = self.currentTime.to_sec()
+        self.diffTime = self.currReceive - self.lastReceive
+        if self.diffTime == 0:
+            return
+        self.lastPosL = self.currPosL
+        self.lastPosR = self.currPosR
+        self.currPosL = data.count_left
+        self.currPosR = data.count_right
+        rospy.loginfo(self.currReceive)
+        rospy.loginfo('Time delta: %f',self.diffTime)
+        rospy.loginfo('-------------------------------')
+        rospy.loginfo('Pos L: %d', self.currPosL)
+        rospy.loginfo('Pos R: %d', self.currPosR)
+        rospy.loginfo('-------------------------------')
+        if self.init == True:
+            self.init = False
+            rospy.loginfo('\n')
+            return
+        self.calculate_wheel_speeds()
+        self.calculate_odometry()
+        rospy.loginfo('\n')
         
 
-    rospy.spin()
+    def calculate_odometry(self):
+        # https://gist.github.com/atotto/f2754f75bedb6ea56e3e0264ec405dcf
+        self.odom.header.stamp = self.currentTime
+        self.fwdSpeedC = (self.linSpeedL + self.linSpeedR) / 2.0
+        self.rotSpeed = (self.linSpeedR - self.linSpeedL) / self.wheel_dist
+        
+        # get increments in position and yaw from velocities
+        delta_x = (self.fwdSpeedC * math.cos(self.rotAngle)) * self.diffTime
+        delta_y = (self.fwdSpeedC * math.sin(self.rotAngle)) * self.diffTime
+        delta_th = self.rotSpeed * self.diffTime
 
+        # sum up with previous values to complete integral calculations
+        self.posX += delta_x
+        self.posY += delta_y
+        self.rotAngle += delta_th
 
-# rospy.init_node('odom_pub', anonymous=True)
-# odom_pub = rospy.Publisher("/odom", Odometry)
+        # since all odometry is 6DOF we'll need a quaternion created from yaw
+        odom_quat = tf.transformations.quaternion_from_euler(0, 0, self.rotAngle)
+        
+        # set the position and velocity
+        self.odom.pose.pose = Pose(Point(self.posX, self.posY, 0.), Quaternion(*odom_quat))
+        self.odom.twist.twist = Twist(Vector3(self.fwdSpeedC, 0, 0), Vector3(0, 0, self.rotSpeed))
 
-# rospy.wait_for_service('/gazebo/get_model_state')
-# get_model_srv = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
+        self.odom_pub.publish(self.odom)
+    
 
-# odom = Odometry()
-# header = Header()
-# header.frame_id = '/odom'
+    def calculate_wheel_speeds(self):
+        
+        diffL = self.currPosL - self.lastPosL
+        diffR = self.currPosR - self.lastPosR
 
-# model = GetModelStateRequest()
-# model.model_name = "robot"
+        if abs(diffL) <= self.assume_folding:
+            self.rotSpeedL = (diffL / self.cpr) * 2 * math.pi / self.diffTime
+            self.linSpeedL = math.pi * self.wheel_diam * (diffL / self.cpr) / self.diffTime
+        else:
+            if self.lastPosL > self.currPosL:
+                self.rotSpeedL = ((self.currPosL + self.cpr - self.lastPosL) / self.cpr * 2 * math.pi) / self.diffTime
+                self.linSpeedL = math.pi * self.wheel_diam * ((self.currPosL + self.cpr - self.lastPosL) / self.cpr) / self.diffTime
+            else:
+                self.rotSpeedL = -((self.lastPosL + self.cpr - self.currPosL) / self.cpr * 2 * math.pi) / self.diffTime
+                self.linSpeedL = - math.pi * self.wheel_diam * ((self.lastPosL + self.cpr - self.currPosL) / self.cpr) / self.diffTime
 
-# r = rospy.Rate(2)
+        if abs(diffR) <= self.assume_folding:
+            self.rotSpeedR = (diffR / self.cpr) * 2 * math.pi / self.diffTime
+            self.linSpeedR = math.pi * self.wheel_diam * (diffR / self.cpr) / self.diffTime
+        else:
+            if self.lastPosR > self.currPosR:
+                self.rotSpeedR = ((self.currPosR + self.cpr - self.lastPosR) / self.cpr * 2 * math.pi) / self.diffTime
+                self.linSpeedR = math.pi * self.wheel_diam * ((self.currPosR + self.cpr - self.lastPosR) / self.cpr) / self.diffTime
+            else:
+                self.rotSpeedR = -((self.lastPosR + self.cpr - self.currPosR) / self.cpr * 2 * math.pi) / self.diffTime
+                self.linSpeedR = -math.pi * self.wheel_diam * ((self.lastPosR + self.cpr - self.currPosR) / self.cpr) / self.diffTime
+        
+        rospy.loginfo('Rot L: %f', self.rotSpeedL)
+        rospy.loginfo('Rot R: %f', self.rotSpeedR)
+        rospy.loginfo('-------------------------------')
 
-# while not rospy.is_shutdown():
+        rospy.loginfo('Lin L: %f', self.linSpeedL)
+        rospy.loginfo('Lin R: %f', self.linSpeedR)
+        rospy.loginfo('-------------------------------')
+        
+    def run(self):
+        """ Main class method."""
+        rospy.Subscriber('encoders_output', counter_message, self.callback)
+        self.odom_pub = rospy.Publisher("odom", Odometry, queue_size=50)
+        # spin() simply keeps python from exiting until this node is stopped
+        rospy.spin()
 
-#     result = get_model_srv(model)
-#     odom.pose.pose = result.pose
-#     odom.twist.twist = result.twist
-
-#     header.stamp = rospy.Time.now()
-#     odom.header = header
-
-#     odom_pub.publish(odom)
-
-#     r.sleep()
 
 if __name__ == '__main__':
-    run()
+    rospy.init_node('odometry', anonymous=True)
+    odometry = OdometryNode()
+    odometry.run()

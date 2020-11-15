@@ -1,0 +1,1 @@
+/home/alekal/catkin_ws/devel/.private/differential_robot_sample/share/common-lisp/ros/differential_robot_sample/msg/_package_counter_message.lisp

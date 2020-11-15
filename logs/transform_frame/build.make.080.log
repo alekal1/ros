@@ -1,0 +1,17 @@
+[  0%] Built target geometry_msgs_generate_messages_eus
+[  0%] Built target tf_generate_messages_eus
+[  0%] Built target tf_generate_messages_py
+[  0%] Built target geometry_msgs_generate_messages_py
+[ 66%] Built target move
+[ 66%] Built target tf_generate_messages_cpp
+[ 66%] Built target geometry_msgs_generate_messages_cpp
+[ 66%] Built target geometry_msgs_generate_messages_lisp
+[ 66%] Built target tf_generate_messages_nodejs
+[ 66%] Built target tf_generate_messages_lisp
+[100%] Built target transform_frame_generate_messages_eus
+[100%] Built target transform_frame_generate_messages_cpp
+[100%] Built target transform_frame_generate_messages_py
+[100%] Built target transform_frame_generate_messages_lisp
+[100%] Built target geometry_msgs_generate_messages_nodejs
+[100%] Built target transform_frame_generate_messages_nodejs
+[100%] Built target transform_frame_generate_messages

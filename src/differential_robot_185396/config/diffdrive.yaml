@@ -4,8 +4,10 @@ publish_rate: 50
 left_wheel: ['base_to_left_wheel']
 right_wheel: ['base_to_right_wheel']
 
-wheel_separation: 0.165
-wheel_radius : 0.035
+wheel_separation: 0.2
+wheel_radius: 0.04
+# wheel_separation: 0.165
+# wheel_radius : 0.035
 
 # Odometry covariances for the encoder output of the robot. These values should
 # be tuned to your robot's sample odometry data, but these values are a good place
@@ -20,9 +22,9 @@ base_frame_id: base_footprint
 linear:
   x:
     has_velocity_limits    : true
-    max_velocity           : 1.0   # m/s
+    max_velocity           : 2   # m/s
     has_acceleration_limits: true
-    max_acceleration       : 0.6   # m/s^2
+    max_acceleration       : 0.4   # m/s^2
 angular:
   z:
     has_velocity_limits    : true

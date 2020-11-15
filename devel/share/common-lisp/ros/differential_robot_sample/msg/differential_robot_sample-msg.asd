@@ -1,0 +1,1 @@
+/home/alekal/catkin_ws/devel/.private/differential_robot_sample/share/common-lisp/ros/differential_robot_sample/msg/differential_robot_sample-msg.asd

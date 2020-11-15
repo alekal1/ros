@@ -1,5 +1,5 @@
 <launch>
-    <arg name="bagfile" default="$(find differential_robot_185396)/bags/nicebag.bag"/>
+    <arg name="bagfile" default="$(find differential_robot_185396)/bags/record.bag"/>
     <arg name="rvizconfig" default="$(find differential_robot_185396)/config/imu.rviz"/>
 
 

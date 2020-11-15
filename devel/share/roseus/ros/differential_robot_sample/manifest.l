@@ -1,0 +1,1 @@
+/home/alekal/catkin_ws/devel/.private/differential_robot_sample/share/roseus/ros/differential_robot_sample/manifest.l

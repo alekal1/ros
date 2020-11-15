@@ -1,0 +1,3 @@
+Symlinking /home/alekal/catkin_ws/devel/share/rrbot_gazebo/cmake/rrbot_gazeboConfig.cmake
+Symlinking /home/alekal/catkin_ws/devel/share/rrbot_gazebo/cmake/rrbot_gazeboConfig-version.cmake
+Symlinking /home/alekal/catkin_ws/devel/lib/pkgconfig/rrbot_gazebo.pc

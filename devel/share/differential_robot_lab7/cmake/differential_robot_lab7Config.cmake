@@ -1,0 +1,1 @@
+/home/alekal/catkin_ws/devel/.private/differential_robot_lab7/share/differential_robot_lab7/cmake/differential_robot_lab7Config.cmake

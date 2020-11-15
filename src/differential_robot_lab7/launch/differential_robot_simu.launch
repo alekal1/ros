@@ -1,0 +1,44 @@
+<!-- Using another version of teleop -->
+
+<launch>
+  <param name="robot_description" command="$(find xacro)/xacro '--inorder' '$(find differential_robot_lab7)/urdf/differential_robot_simu.urdf'"/>
+  <arg name="model" default="$(find differential_robot_lab7)/urdf/differential_robot_simu.urdf"/>
+  <arg name="rvizconfig" default="$(find differential_robot_lab7)/config/differential_robot_rviz.rviz" />
+  
+  <include file="$(find differential_robot_lab7)/launch/gazebo.launch">
+    <arg name="model" value="$(arg model)" />
+  </include> 
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find differential_robot_lab7)/config/differential_robot_rviz.rviz" />
+  <!--<node name="rqt_graph" pkg="rqt_graph" type="rqt_graph" />-->
+
+  <!-- encoders -->
+  <node name="encoders" pkg="differential_robot_lab7" type="encoders_node.py"/>
+
+  <!-- odometry -->
+  <node name="odometry" pkg="differential_robot_lab7" type="odometry_node.py"/>
+
+  <!-- mission controller -->
+  <node name="mission" pkg="differential_robot_lab7" type="simple_control_better_2.py" output="screen" launch-prefix="xterm -e"/>
+
+  <!-- link map to odom (no ground-truth correction) -->
+  <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 map odom 50" />
+
+  <!-- Load parameters from yaml files into specified namespaces -->
+  <rosparam command="load"
+    file="$(find differential_robot_lab7)/config/joints.yaml"
+    ns="controller_joints" />
+  <rosparam command="load"
+    file="$(find differential_robot_lab7)/config/diffdrive.yaml"
+    ns="controller_diffdrive" />
+  <rosparam command="load"
+    file="$(find differential_robot_lab7)/config/simple_control_v2.yaml"
+    ns="controller_waypoints" />
+
+  <!-- Spawn the controllers -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner"
+    args="controller_joints
+          controller_diffdrive
+          --shutdown-timeout 3"/>
+
+</launch>

@@ -1,0 +1,33 @@
+[35m[1mScanning dependencies of target std_msgs_generate_messages_eus[0m
+[35m[1mScanning dependencies of target std_msgs_generate_messages_cpp[0m
+[35m[1mScanning dependencies of target _differential_robot_185104iaib_generate_messages_check_deps_counter_message[0m
+[35m[1mScanning dependencies of target std_msgs_generate_messages_py[0m
+[35m[1mScanning dependencies of target std_msgs_generate_messages_nodejs[0m
+[  0%] Built target std_msgs_generate_messages_eus
+[35m[1mScanning dependencies of target std_msgs_generate_messages_lisp[0m
+[  0%] Built target std_msgs_generate_messages_cpp
+[  0%] Built target std_msgs_generate_messages_py
+[  0%] Built target std_msgs_generate_messages_nodejs
+[  0%] Built target std_msgs_generate_messages_lisp
+[  0%] Built target _differential_robot_185104iaib_generate_messages_check_deps_counter_message
+[35m[1mScanning dependencies of target differential_robot_185104iaib_generate_messages_eus[0m
+[35m[1mScanning dependencies of target differential_robot_185104iaib_generate_messages_lisp[0m
+[35m[1mScanning dependencies of target differential_robot_185104iaib_generate_messages_cpp[0m
+[35m[1mScanning dependencies of target differential_robot_185104iaib_generate_messages_py[0m
+[35m[1mScanning dependencies of target differential_robot_185104iaib_generate_messages_nodejs[0m
+[ 14%] [34m[1mGenerating EusLisp code from differential_robot_185104iaib/counter_message.msg[0m
+[ 28%] [34m[1mGenerating EusLisp manifest code for differential_robot_185104iaib[0m
+[ 42%] [34m[1mGenerating Python from MSG differential_robot_185104iaib/counter_message[0m
+[ 57%] [34m[1mGenerating C++ code from differential_robot_185104iaib/counter_message.msg[0m
+[ 71%] [34m[1mGenerating Lisp code from differential_robot_185104iaib/counter_message.msg[0m
+[ 85%] [34m[1mGenerating Javascript code from differential_robot_185104iaib/counter_message.msg[0m
+[ 85%] Built target differential_robot_185104iaib_generate_messages_nodejs
+[ 85%] Built target differential_robot_185104iaib_generate_messages_lisp
+WARNING: Package name "machine_vision_185396IAIB" does not follow the naming conventions. It should start with a lower case letter and only contain lower case letters, digits, underscores, and dashes.
+[100%] [34m[1mGenerating Python msg __init__.py for differential_robot_185104iaib[0m
+[100%] Built target differential_robot_185104iaib_generate_messages_cpp
+[100%] Built target differential_robot_185104iaib_generate_messages_py
+WARNING: Package name "machine_vision_185396IAIB" does not follow the naming conventions. It should start with a lower case letter and only contain lower case letters, digits, underscores, and dashes.
+[100%] Built target differential_robot_185104iaib_generate_messages_eus
+[35m[1mScanning dependencies of target differential_robot_185104iaib_generate_messages[0m
+[100%] Built target differential_robot_185104iaib_generate_messages

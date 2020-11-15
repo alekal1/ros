@@ -1,0 +1,1 @@
+/home/alekal/catkin_ws/devel/.private/differential_robot_sample/lib/python2.7/dist-packages/differential_robot_sample/msg/_counter_message.py

@@ -52,8 +52,8 @@ class EncodersNode():
 
     def step(self):
         """
-Performs one iteration of class loop.
-Publishes click count for each wheel based on the transformations between base_link and the wheels.
+        Performs one iteration of class loop.
+        Publishes click count for each wheel based on the transformations between base_link and the wheels.
         """
         try:
             rot_left = self.listener.lookupTransform(

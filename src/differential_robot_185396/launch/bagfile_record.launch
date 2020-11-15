@@ -1,6 +1,13 @@
 <launch>
 
-    <node name="serial_interface_node" pkg="differential_robot_185396" type="serial_interface.py" output="screen" args="/dev/ttyUSB*"/>
-    <node pkg="differential_robot_185396" type="record" name="rosbag_record"
-    <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args='1 0 0 0 0 0 1 map imu_link 100'/>
+    <arg name="model" default="$(find differential_robot_185396)/urdf/differential_robot_simu.urdf"/>
+    <include file='$(find differential_robot_185396)/launch/differential_robot_simu.launch'>
+        <arg name="model" value="$(arg model)" />
+    </include>
+    
+    <node name="serial_interface_node" pkg="differential_robot_185396" type="serial_interface.py" output="screen" args="/dev/ttyUSB0"/>
+    <node pkg="rosbag" type='record' name='recorder' args='record -a -O $(find differential_robot_185396)/bags/record.bag'/>
+    <node pkg="differential_robot_185396" name='steering' type='steering_node.py'/>
+    <node pkg="tf" type='static_transform_publisher' name='link1_broadcaster' args='1 0 0 0 0 0 1 map imu 100' />
+
 </launch>

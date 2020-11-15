@@ -1,0 +1,1 @@
+/home/alekal/catkin_ws/devel/.private/rrobot_description/share/rrobot_description/cmake/rrobot_descriptionConfig-version.cmake

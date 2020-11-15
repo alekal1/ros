@@ -1,0 +1,5 @@
+differential_robot_lab7
+/home/alekal/catkin_ws/devel/.private/differential_robot_lab7/cmake.lock /home/alekal/catkin_ws/devel/./cmake.lock
+/home/alekal/catkin_ws/devel/.private/differential_robot_lab7/share/differential_robot_lab7/cmake/differential_robot_lab7Config-version.cmake /home/alekal/catkin_ws/devel/share/differential_robot_lab7/cmake/differential_robot_lab7Config-version.cmake
+/home/alekal/catkin_ws/devel/.private/differential_robot_lab7/share/differential_robot_lab7/cmake/differential_robot_lab7Config.cmake /home/alekal/catkin_ws/devel/share/differential_robot_lab7/cmake/differential_robot_lab7Config.cmake
+/home/alekal/catkin_ws/devel/.private/differential_robot_lab7/lib/pkgconfig/differential_robot_lab7.pc /home/alekal/catkin_ws/devel/lib/pkgconfig/differential_robot_lab7.pc

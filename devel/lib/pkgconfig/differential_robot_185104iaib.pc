@@ -1,0 +1,1 @@
+/home/alekal/catkin_ws/devel/.private/differential_robot_185104iaib/lib/pkgconfig/differential_robot_185104iaib.pc

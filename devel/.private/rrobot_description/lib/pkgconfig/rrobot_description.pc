@@ -1,0 +1,8 @@
+prefix=/home/alekal/catkin_ws/devel/.private/rrobot_description
+
+Name: rrobot_description
+Description: Description of rrobot_description
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

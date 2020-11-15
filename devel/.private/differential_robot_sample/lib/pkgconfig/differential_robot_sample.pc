@@ -1,0 +1,8 @@
+prefix=/home/alekal/catkin_ws/devel/.private/differential_robot_sample
+
+Name: differential_robot_sample
+Description: Description of differential_robot_sample
+Version: 0.0.0
+Cflags: -I/home/alekal/catkin_ws/devel/.private/differential_robot_sample/include
+Libs: -L${prefix}/lib -ldifferential_robot_sample
+Requires: message_runtime
