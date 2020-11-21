@@ -36,6 +36,10 @@
   <node name="odometry_node" pkg="differential_robot_185396" type="odometry_node.py"/>
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
 
+  <node name="simple_control_node" pkg="differential_robot_185396" type="simple_control_template.py" output="screen">
+    <remap from="/odom" to="/diff_drive_controller/odom"/>
+  </node>
+
 
   <!-- <node pkg="gmapping" type="slam_gmapping" name="gmapping_node">
     <remap from="scan" to="/scan"/>

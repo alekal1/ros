@@ -1,0 +1,36 @@
+<launch>
+    <arg name="model" default="$(find differential_robot_185396)/urdf/differential_robot_laser.urdf"/>
+    <!-- <arg name="rvizconfig" default="$(find differential_robot_sample)/config/config_enc.rviz"/> -->
+
+    <arg name="rvizconfig" default="$(find differential_robot_185396)/config/config_nav_stack.rviz"/>
+    
+    <arg name="map_file" default="$(find differential_robot_185396)/map/room.yaml"/>
+
+    <param name="use_gui" value="true"/>
+
+    <include file="$(find differential_robot_185396)/launch/gazebo.launch">
+        <arg name="model" value="$(arg model)"/>
+    </include>
+
+
+    <node name="differential_robot_controller_spawner" pkg="controller_manager" type="spawner"
+    args="joint_state_controller
+          diff_drive_controller"/>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)"/>
+
+    <node name="encoder_node" pkg="differential_robot_185396" type="encoders_node.py"/>
+    <node name="odometry_node" pkg="differential_robot_185396" type="odometry_node.py"/>
+    <!-- <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/> -->
+    <node pkg="gmapping" type="slam_gmapping" name="gmapping_node" args="scan:=scan"/>
+
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+        <rosparam file="$(find differential_robot_185396)/config/costmap_common_params.yaml" command="load" ns="global_costmap" /> 
+        <rosparam file="$(find differential_robot_185396)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find differential_robot_185396)/config/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find differential_robot_185396)/config/global_costmap_params.yaml" command="load" /> 
+        <rosparam file="$(find differential_robot_185396)/config/base_local_planner_params.yaml" command="load" />
+        <!-- <remap from="/cmd_vel" to="/diff_drive_controller/cmd_vel"/> -->
+    </node>
+
+</launch>
